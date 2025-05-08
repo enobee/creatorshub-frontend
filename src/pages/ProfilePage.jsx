@@ -3,7 +3,6 @@ import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import Sidebar from "../components/Sidebar";
 import api from "../api";
-import { Menu } from "lucide-react";
 
 export default function ProfilePage() {
   const { token } = useContext(AuthContext);
@@ -15,12 +14,13 @@ export default function ProfilePage() {
     preferences: [],
     lastLoginDate: null,
   });
+  const [preferencesInput, setPreferencesInput] = useState("");
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -42,6 +42,10 @@ export default function ProfilePage() {
           preferences: userData.preferences || [],
           lastLoginDate: userData.lastLoginDate || null,
         });
+
+        setPreferencesInput(
+          userData.preferences ? userData.preferences.join(", ") : ""
+        );
         setStats(creditsRes.data);
       } catch (err) {
         console.error(err);
@@ -56,18 +60,18 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "preferences") {
-      // split by comma, remove extra spaces
-      const prefs = value
-        .split(",")
-        .map((p) => p.trim())
-        .filter((p) => p);
-      setProfile((prev) => ({ ...prev, preferences: prefs }));
+      setPreferencesInput(value);
     } else {
       setProfile((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSave = async () => {
+    const prefsArray = preferencesInput
+      .split(",")
+      .map((p) => p.trim())
+      .filter((p) => p);
+
     setSaving(true);
     setError("");
     try {
@@ -76,10 +80,15 @@ export default function ProfilePage() {
         {
           bio: profile.bio,
           country: profile.country,
-          preferences: profile.preferences,
+          preferences: prefsArray,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      setProfile((prev) => ({
+        ...prev,
+        preferences: prefsArray,
+      }));
       toast.success(res.data.message);
       setStats((prev) => ({ ...prev, totalCredits: res.data.credits }));
       setEditMode(false);
@@ -105,25 +114,14 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      {/* Mobile header with menu toggle */}
-      <div className="md:hidden p-4 bg-indigo-800 text-white flex justify-between items-center">
-        <h1 className="font-bold text-xl">Your Profile</h1>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
-          <Menu size={24} />
-        </button>
-      </div>
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      {/* Sidebar - hidden on mobile unless toggled */}
-      <div
-        className={`${
-          sidebarOpen ? "block" : "hidden"
-        } md:block w-full md:w-64 bg-indigo-900 text-white`}
+      <main
+        className={`flex-1 p-4 md:p-6 mt-16 md:mt-0 bg-gray-50 transition-all duration-300 ${
+          sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+        }`}
       >
-        <Sidebar />
-      </div>
-
-      <main className="flex-1 p-4 md:p-6">
-        <h1 className="text-2xl md:text-3xl font-extrabold mb-4 md:mb-6 hidden md:block">
+        <h1 className="text-2xl md:text-3xl font-extrabold mb-4 md:mb-6 md:block">
           Your Profile
         </h1>
 
@@ -204,7 +202,7 @@ export default function ProfilePage() {
                   </label>
                   <input
                     name="preferences"
-                    value={profile.preferences.join(", ")}
+                    value={preferencesInput}
                     onChange={handleChange}
                     className="w-full mt-1 p-2 text-sm md:text-base border border-gray-300 rounded-md md:rounded-lg focus:ring-2 focus:ring-indigo-300 focus:outline-none"
                   />
@@ -218,7 +216,11 @@ export default function ProfilePage() {
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
                   <button
-                    onClick={() => setEditMode(false)}
+                    onClick={() => {
+                      setEditMode(false);
+                      // Reset preferences input when canceling
+                      setPreferencesInput(profile.preferences.join(", "));
+                    }}
                     className="w-full sm:w-auto mt-2 sm:mt-0 px-4 md:px-5 py-1.5 md:py-2 border border-gray-300 text-sm md:text-base rounded-md md:rounded-lg hover:bg-gray-100 transition"
                   >
                     Cancel
@@ -275,8 +277,7 @@ export default function ProfilePage() {
               </ul>
             )}
 
-            {/* Empty div to push the stats up when content is minimal */}
-            <div className="flex-grow"></div>
+            <div className="flex-grow" />
 
             <div className="mt-4 pt-3 border-t border-gray-100 text-xs md:text-sm text-gray-500">
               <p>Complete your profile to earn additional credits!</p>

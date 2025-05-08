@@ -1,4 +1,3 @@
-// File: src/pages/FeedPage.jsx
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
@@ -11,6 +10,7 @@ export default function FeedPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     async function fetchFeed() {
@@ -29,11 +29,11 @@ export default function FeedPage() {
     if (token) fetchFeed();
   }, [token]);
 
-  const handleAction = async (postId, source, url, action) => {
+  const handleAction = async (postId, source, url, text, title, action) => {
     try {
       await api.post(
         `/api/feed/${action}`,
-        { postId, source, url },
+        { postId, source, url, text, title },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (action === "save") toast.success("Content saved! +5 credits earned");
@@ -67,8 +67,12 @@ export default function FeedPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+      <main
+        className={`flex-1 p-6 bg-gray-50 overflow-y-auto mt-16 md:mt-0 transition-all duration-300 ${
+          sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+        }`}
+      >
         <h1 className="text-3xl font-extrabold mb-4">Content Feed</h1>
         <div className="space-y-6">
           {posts.map((post) => (
@@ -77,12 +81,26 @@ export default function FeedPage() {
               post={post}
               isSaved={false}
               onSave={() =>
-                handleAction(post.id, post.source, post.url, "save")
+                handleAction(
+                  post.id,
+                  post.source,
+                  post.url,
+                  post.text,
+                  post.title,
+                  "save"
+                )
               }
               onUnsave={null}
               onShare={() => handleShare(post.url)}
               onReport={() =>
-                handleAction(post.id, post.source, post.url, "report")
+                handleAction(
+                  post.id,
+                  post.source,
+                  post.url,
+                  post.text,
+                  post.title,
+                  "report"
+                )
               }
             />
           ))}

@@ -115,10 +115,13 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-gray-50 px-8 py-5 border-t border-gray-100">
-              <p>
-                For testing of Admin Dashboard, login in with email =
-                admin@example.com, password = admin
+              <p className="text-sm text-gray-700 mb-3">
+                For testing of the Admin Dashboard, use the credentials:
               </p>
+              <pre className="bg-gray-100 p-3 rounded text-sm font-mono text-gray-800 mb-4 overflow-auto">
+                email: admin@example.com password: admin
+              </pre>
+
               <p className="text-center text-gray-600">
                 Don't have an account?{" "}
                 <Link

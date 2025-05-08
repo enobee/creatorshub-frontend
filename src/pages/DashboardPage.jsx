@@ -1,4 +1,3 @@
-// File: src/pages/DashboardPage.jsx
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -6,16 +5,13 @@ import Sidebar from "../components/Sidebar";
 import FeedItem from "../components/FeedItem";
 import api from "../api";
 
-/**
- * DashboardPage
- * Styled dashboard showing user stats and saved content
- */
 export default function DashboardPage() {
   const { token, user } = useContext(AuthContext);
   const [stats, setStats] = useState(null);
   const [savedPosts, setSavedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -35,6 +31,7 @@ export default function DashboardPage() {
           ? raw.map((p) => ({ ...p, id: p.postId }))
           : [];
         setSavedPosts(postsWithId);
+        console.log({ savedContent: postsWithId });
       } catch (err) {
         console.error("Dashboard fetch error:", err.response);
         setError(err.response?.data?.message || "Failed to load dashboard");
@@ -55,8 +52,12 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col p-4 md:p-8">
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+      <div
+        className={`flex-1 flex flex-col p-4 md:p-8 mt-16 md:mt-0 transition-all duration-300 ${
+          sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+        }`}
+      >
         {/* Header */}
         <header className="max-w-7xl w-full mx-auto mb-6">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">
@@ -68,7 +69,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Stats Grid */}
-        <section className="max-w-7xl w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section className="max-w-7xl w-full mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-4 rounded-2xl shadow flex flex-col">
             <p className="text-sm font-medium text-gray-500 uppercase">
               Total Credits
@@ -111,7 +112,7 @@ export default function DashboardPage() {
           {savedPosts.length === 0 ? (
             <p className="text-gray-600">You haven't saved any content yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto h-[60vh]">
+            <div className="space-y-6">
               {savedPosts.map((post) => (
                 <FeedItem
                   key={post.id}
