@@ -83,7 +83,7 @@ export default function DashboardPage() {
               Login Streak
             </p>
             <p className="mt-2 text-2xl font-bold text-gray-800">
-              {stats.loginStreak} days
+              {stats.loginStreak} day(s)
             </p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow flex flex-col">

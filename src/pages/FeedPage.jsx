@@ -77,7 +77,7 @@ export default function FeedPage() {
         <div className="space-y-6">
           {posts.map((post) => (
             <FeedItem
-              key={post.id}
+              key={post.id || post.url}
               post={post}
               isSaved={false}
               onSave={() =>
